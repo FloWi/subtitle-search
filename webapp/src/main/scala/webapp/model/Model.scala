@@ -1,6 +1,7 @@
 package webapp.model
 
 import cats.effect.IO
+import colibri.Observable
 import webapp.AssetsInput
 import webapp.AssetsInput.FileEntry
 import webapp.components.VttMerger
@@ -21,7 +22,16 @@ object Model {
     override val folder: String = entry.path.replace(s"/${entry.name}", "")
   }
 
+  case class SearchResult(lecture: Lecture, matchingSentences: List[SubtitleSentence])
+
   object Lecture {
+    def search(lectures: List[Lecture], text: String): List[SearchResult] =
+      lectures.flatMap { l =>
+        val matches = l.sentences.filter(s => s.sentence.toLowerCase.contains(text.toLowerCase))
+        if (matches.isEmpty) List.empty
+        else List(SearchResult(l, matches))
+
+      }
 
     def loadAndParseSubtitle(file: SubtitleFile): IO[List[SubtitleSentence]] =
       AssetsInput.loadSubtitle(file.entry).map { content =>
