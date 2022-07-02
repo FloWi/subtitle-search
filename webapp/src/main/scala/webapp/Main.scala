@@ -6,7 +6,7 @@ import org.scalajs.dom.KeyCode
 import outwatch._
 import outwatch.dsl._
 import webapp.components.VttMerger.SubtitleSentence
-import webapp.model.Model.{Lecture, SearchResult, SearchResultEntry}
+import webapp.model.Model.{Lecture, SearchResult}
 
 // Outwatch documentation:
 // https://outwatch.github.io/docs/readme.html
@@ -56,41 +56,44 @@ object Main {
       }
     }
 
+    searchResultSub.unsafeForeach(_ => selectedSubtitleLocation.unsafeOnNext(None))
+
     val searchDiv = div(
       submitTextbox(searchText, submittedSearchText),
       searchResultSub.map { result =>
         val results = result.entries
 
-        results.map { sr =>
-          val lecture = sr.lecture
-          val merged  = table(
-            cls := "table table-zebra w-full",
-            thead(
-              tr(
-                th("from"),
-                th("to"),
-                th("sentence"),
-                th("jump"),
-              ),
+        val tbl = table(
+          thead(
+            tr(
+              th("from"),
+              th("to"),
+              th("sentence"),
+              th("jump"),
             ),
-            tbody(
-              sr.matchingSentences.map { sub =>
-                tr(
-                  td(sub.from),
-                  td(sub.to),
-                  td(markSearchTermInText(result.searchTerm, sub)),
-                  td(button("Jump", onClick.as(Some((result, lecture, sub))) --> selectedSubtitleLocation)),
-                )
+          ),
+          tbody(
+            results.map { sr =>
+              VModifier(
+                tr(td(colSpan := 4, h5(sr.lecture.title))),
+                sr.matchingSentences.map { sub =>
+                  tr(
+                    td(sub.from),
+                    td(sub.to),
+                    td(markSearchTermInText(result.searchTerm, sub)),
+                    td(button("Jump", onClick.as(Some((result, sr.lecture, sub))) --> selectedSubtitleLocation)),
+                  )
 
-              },
-            ),
-          )
+                },
+              )
+            },
+          ),
+        )
 
-          div(
-            h3(lecture.title),
-            merged,
-          )
-        }
+        div(
+          tbl,
+        )
+
       },
       h2("All Lessons"),
       ul(
@@ -128,13 +131,13 @@ object Main {
           )
 
           div(
-            h2("Watch"),
             tbl,
             h3(lecture.title),
             video(
               src                        := s"${lecture.videoFile.entry.path}#t=${sentence.from / 1000}",
               VModifier.attr("controls") := true,
               tpe                        := "video/mp4",
+              width                      := "90%",
             ),
           )
       },
@@ -143,8 +146,8 @@ object Main {
     div(
       display.flex,
       flexDirection.row,
-      searchDiv(width := "1/3"),
-      videoDiv(width  := "2/3"),
+      div(width := "33.3%", h2("Search"), searchDiv),
+      div(width := "66.6%", h2("Watch"), videoDiv),
     )
   }
 
