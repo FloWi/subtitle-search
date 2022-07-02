@@ -6,7 +6,7 @@ import org.scalajs.dom.KeyCode
 import outwatch._
 import outwatch.dsl._
 import webapp.components.VttMerger.SubtitleSentence
-import webapp.model.Model.{Lecture, SearchResult}
+import webapp.model.Model.{Lecture, SearchResult, SearchResultEntry}
 
 // Outwatch documentation:
 // https://outwatch.github.io/docs/readme.html
@@ -27,6 +27,16 @@ object Main {
     lectures    <- Lecture.load(files)
   } yield lectures
 
+  def markSearchTermInText(searchTerm: String, sentence: SubtitleSentence) = {
+
+    val idx    = sentence.sentence.toLowerCase.indexOf(searchTerm.toLowerCase)
+    val before = sentence.sentence.substring(0, idx)
+    val term   = sentence.sentence.substring(idx, idx + searchTerm.length)
+    val after  = sentence.sentence.substring(idx + searchTerm.length)
+    p(before, VNode.html("mark")(term), after)
+
+  }
+
   def renderUI(lectures: List[Lecture]): HtmlVNode = {
 
     val selectedLectureSubject = Subject.behavior(Option.empty[Lecture])
@@ -34,20 +44,23 @@ object Main {
     val searchText          = Subject.behavior("")
     val submittedSearchText = Subject.behavior("")
 
-    val selectedSubtitleLocation: BehaviorSubject[Option[(Lecture, SubtitleSentence)]] = Subject.behavior(Option.empty)
+    val selectedSubtitleLocation: BehaviorSubject[Option[(SearchResult, Lecture, SubtitleSentence)]] =
+      Subject.behavior(Option.empty)
 
-    val searchResultSub: Observable[List[SearchResult]] = submittedSearchText.distinctOnEquals.flatMap { text =>
+    val searchResultSub: Observable[SearchResult] = submittedSearchText.distinctOnEquals.flatMap { text =>
       if (text.nonEmpty) {
         Observable(Lecture.search(lectures, text))
       }
       else {
-        Observable(List.empty)
+        Observable(SearchResult(text, List.empty))
       }
     }
 
     val searchDiv = div(
       submitTextbox(searchText, submittedSearchText),
-      searchResultSub.map { results =>
+      searchResultSub.map { result =>
+        val results = result.entries
+
         results.map { sr =>
           val lecture = sr.lecture
           val merged  = table(
@@ -64,8 +77,8 @@ object Main {
                 tr(
                   td(sub.from),
                   td(sub.to),
-                  td(sub.sentence),
-                  td(button("Jump", onClick.as(Some(sr.lecture -> sub)) --> selectedSubtitleLocation)),
+                  td(markSearchTermInText(result.searchTerm, sub)),
+                  td(button("Jump", onClick.as(Some((result, lecture, sub))) --> selectedSubtitleLocation)),
                 )
 
               },
@@ -92,11 +105,10 @@ object Main {
     <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4"/>
     Video not supported.
 </video>
-
        */
       selectedSubtitleLocation.map {
-        case None                      => VModifier.empty
-        case Some((lecture, sentence)) =>
+        case None                          => VModifier.empty
+        case Some((sr, lecture, sentence)) =>
           val tbl = table(
             thead(
               tr(
@@ -109,7 +121,7 @@ object Main {
               tr(
                 td(sentence.from),
                 td(sentence.to),
-                td(sentence.sentence),
+                td(markSearchTermInText(sr.searchTerm, sentence)),
               ),
             ),
           )
@@ -120,7 +132,7 @@ object Main {
             h3(lecture.title),
             video(
               src                        := s"${lecture.videoFile.entry.path}#t=${sentence.from / 1000}",
-              VModifier.attr("controls") := "empty",
+              VModifier.attr("controls") := true,
               tpe                        := "video/mp4",
             ),
           )

@@ -22,16 +22,18 @@ object Model {
     override val folder: String = entry.path.replace(s"/${entry.name}", "")
   }
 
-  case class SearchResult(lecture: Lecture, matchingSentences: List[SubtitleSentence])
+  case class SearchResult(searchTerm: String, entries: List[SearchResultEntry])
+  case class SearchResultEntry(lecture: Lecture, matchingSentences: List[SubtitleSentence])
 
   object Lecture {
-    def search(lectures: List[Lecture], text: String): List[SearchResult] =
-      lectures.flatMap { l =>
+    def search(lectures: List[Lecture], text: String): SearchResult = {
+      val entries = lectures.flatMap { l =>
         val matches = l.sentences.filter(s => s.sentence.toLowerCase.contains(text.toLowerCase))
         if (matches.isEmpty) List.empty
-        else List(SearchResult(l, matches))
-
+        else List(SearchResultEntry(l, matches))
       }
+      SearchResult(text, entries)
+    }
 
     def loadAndParseSubtitle(file: SubtitleFile): IO[List[SubtitleSentence]] =
       AssetsInput.loadSubtitle(file.entry).map { content =>
