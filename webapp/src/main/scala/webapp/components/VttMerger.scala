@@ -20,10 +20,10 @@ object VttMerger {
       intermediate: Queue[SubtitleEntry],
       result: Queue[SubtitleSentence],
     ): List[SubtitleSentence] =
+      // example:
       // awesome ending of first sentence. This is the beginning of the 2nd
       current match {
         case ::(head, next) =>
-          println(s"analyzing '${head.text}'")
           firstIndexOfPunctuation(head.text) match {
             case None      => helper(next, intermediate.enqueue(head), result)
             case Some(idx) =>
@@ -34,7 +34,12 @@ object VttMerger {
               val mergedSentence = intermediate.map(_.text).mkString(" ") + beforeDot + punctuationChar
               val ids            = intermediate.map(_.id) ++ List(head.id)
               val res            =
-                SubtitleSentence(mergedSentence, ids.toList, intermediate.map(_.from).minOption.getOrElse(0), head.to)
+                SubtitleSentence(
+                  mergedSentence,
+                  ids.toList,
+                  intermediate.map(_.from).minOption.getOrElse(head.from),
+                  head.to,
+                )
 
               if (afterDot.isEmpty)
                 helper(current = next, intermediate = Queue.empty, result = result.enqueue(res))

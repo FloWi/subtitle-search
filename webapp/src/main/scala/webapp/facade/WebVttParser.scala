@@ -16,10 +16,10 @@ trait ParsedResult extends js.Object {
 
 @js.native
 trait SubtitleEntry extends js.Object {
-  val id: String   = js.native
-  val from: Int    = js.native
-  val to: Int      = js.native
-  val text: String = js.native
+  def id: String
+  def from: Int
+  def to: Int
+  def text: String
 }
 
 object SubtitleEntry {

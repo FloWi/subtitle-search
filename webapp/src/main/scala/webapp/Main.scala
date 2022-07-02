@@ -1,14 +1,10 @@
 package webapp
 
 import cats.effect.{IO, SyncIO}
-import colibri.{Observable, Subject}
+import colibri.Subject
 import outwatch._
 import outwatch.dsl._
-import webapp.AssetsInput.FileEntry
-import webapp.components.VttMerger
-import webapp.facade.{SubtitleEntry, WebVttParser}
-
-import scala.scalajs.js
+import webapp.model.Model.Lecture
 
 // Outwatch documentation:
 // https://outwatch.github.io/docs/readme.html
@@ -18,29 +14,24 @@ object Main {
     Outwatch.renderInto[SyncIO]("#app", app).unsafeRunSync()
 
   def app = div(
-    AssetsInput.allAssetFiles.map { files =>
-      renderUI(AssetsInput.flatten(files))
+    lecturesIO.map { lectures =>
+      renderUI(lectures)
     },
   )
 
-  def renderUI(files: List[FileEntry]): HtmlVNode = {
+  val lecturesIO: IO[List[Lecture]] = for {
+    filesOrDirs <- AssetsInput.allAssetFiles
+    files        = AssetsInput.flatten(filesOrDirs)
+    lectures    <- Lecture.load(files)
+  } yield lectures
 
-    val selectedSubtitleFileSubject = Subject.behavior(Option.empty[FileEntry])
-    val subtitleFiles               = files.filter(_.name.endsWith(".vtt"))
+  def renderUI(lectures: List[Lecture]): HtmlVNode = {
 
-    val selectedSubtitleSub: Observable[Option[(FileEntry, String)]] = selectedSubtitleFileSubject.mapEffect {
-      case Some(file) =>
-        AssetsInput.loadSubtitle(file).map(content => Some(file -> content))
-      case None       => IO(None)
-    }
+    val selectedLectureSubject = Subject.behavior(Option.empty[Lecture])
 
     div(
-      h2("Selected File"),
-      selectedSubtitleSub.map {
-        case Some((file, content)) =>
-          val subtitleEntries: js.Array[SubtitleEntry] = WebVttParser.parse(content).entries
-          val mergedSentences                          = VttMerger.mergeSentences(subtitleEntries.toList.take(10))
-
+      selectedLectureSubject.map {
+        case Some(lecture) =>
           val merged = table(
             thead(
               tr(
@@ -51,7 +42,7 @@ object Main {
               ),
             ),
             tbody(
-              mergedSentences.map { sub =>
+              lecture.sentences.map { sub =>
                 tr(
                   td(sub.originalEntries.mkString(", ")),
                   td(sub.from),
@@ -63,44 +54,18 @@ object Main {
             ),
           )
 
-          val original = table(
-            thead(
-              tr(
-                th("id"),
-                th("from"),
-                th("to"),
-                th("text"),
-              ),
-            ),
-            tbody(
-              subtitleEntries.map { sub =>
-                js.Dynamic.global.console.log(sub)
-                tr(
-                  td(sub.id),
-                  td(sub.from),
-                  td(sub.to),
-                  td(sub.text),
-                )
-
-              },
-            ),
-          )
-
           div(
-            h3(file.toString),
+            h3(lecture.title),
             h3("merged"),
             merged,
-            h3("original"),
-            original,
-            pre(content),
           )
-        case None                  =>
+        case None          =>
           VModifier.empty
       },
-      h2("All Subtitle Files"),
+      h2("All Lessons"),
       ul(
-        subtitleFiles.map { file =>
-          li(s"${file.path}/${file.name}", onClick.as(Some(file)) --> selectedSubtitleFileSubject)
+        lectures.map { lecture =>
+          li(s"${lecture.title}", onClick.as(Some(lecture)) --> selectedLectureSubject)
         },
       ),
     )
