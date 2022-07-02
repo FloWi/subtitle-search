@@ -29,11 +29,22 @@ object Main {
 
   def markSearchTermInText(searchTerm: String, sentence: SubtitleSentence) = {
 
-    val idx    = sentence.sentence.toLowerCase.indexOf(searchTerm.toLowerCase)
-    val before = sentence.sentence.substring(0, idx)
-    val term   = sentence.sentence.substring(idx, idx + searchTerm.length)
-    val after  = sentence.sentence.substring(idx + searchTerm.length)
-    p(before, VNode.html("mark")(term), after)
+    val idx               = sentence.sentence.toLowerCase.indexOf(searchTerm.toLowerCase)
+    val before            = sentence.sentence.substring(0, idx)
+    val term              = sentence.sentence.substring(idx, idx + searchTerm.length)
+    val after             = sentence.sentence.substring(idx + searchTerm.length)
+    val isMatchInsideWord =
+      before.lastOption.exists(c => !c.isWhitespace) || after.headOption.exists(c => !c.isWhitespace)
+
+    val markedSection = VNode.html("mark")(term)
+    val formatted     =
+      if (isMatchInsideWord) markedSection(padding := "2px 0px")
+      else markedSection
+
+    println(s"searchterm: $searchTerm; insideWord: $isMatchInsideWord, sentence: '$sentence'")
+    p(
+      span(before, formatted, after),
+    )
 
   }
 
@@ -165,7 +176,7 @@ object Main {
         onInput.value --> text,
         onEnter(text) --> submitted,
       ),
-      button("clear", onClick.as("") --> text),
+      button("clear", onClick.as("") --> text, onClick.as("") --> submitted),
       button("search", onClick(text) --> submitted),
     )
   }
