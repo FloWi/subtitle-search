@@ -74,35 +74,39 @@ object Main {
       searchResultSub.map { result =>
         val results = result.entries
 
-        val tbl = table(
-          thead(
-            tr(
-              th("from"),
-              th("to"),
-              th("sentence"),
-              th("jump"),
-            ),
-          ),
-          tbody(
-            results.map { sr =>
-              VModifier(
-                tr(td(colSpan := 4, h5(sr.lecture.title))),
-                sr.matchingSentences.map { sub =>
-                  tr(
-                    td(sub.from),
-                    td(sub.to),
-                    td(markSearchTermInText(result.searchTerm, sub)),
-                    td(button("Jump", onClick.as(Some((result, sr.lecture, sub))) --> selectedSubtitleLocation)),
-                  )
+        val resultHtml = {
+          if (results.isEmpty) VModifier.empty
+          else
+            table(
+              thead(
+                tr(
+                  th("from"),
+                  th("to"),
+                  th("sentence"),
+                  th("jump"),
+                ),
+              ),
+              tbody(
+                results.map { sr =>
+                  VModifier(
+                    tr(td(colSpan := 4, h5(sr.lecture.title))),
+                    sr.matchingSentences.map { sub =>
+                      tr(
+                        td(sub.from),
+                        td(sub.to),
+                        td(markSearchTermInText(result.searchTerm, sub)),
+                        td(button("Jump", onClick.as(Some((result, sr.lecture, sub))) --> selectedSubtitleLocation)),
+                      )
 
+                    },
+                  )
                 },
-              )
-            },
-          ),
-        )
+              ),
+            )
+        }
 
         div(
-          tbl,
+          resultHtml,
         )
 
       },
@@ -154,11 +158,41 @@ object Main {
       },
     )
 
+    val debug = div(
+      selectedLectureSubject.map {
+        case None          => VModifier.empty
+        case Some(lecture) =>
+          table(
+            thead(
+              tr(
+                th("from"),
+                th("to"),
+                th("sentence"),
+              ),
+            ),
+            tbody(
+              lecture.sentences.map { sub =>
+                tr(
+                  td(sub.from),
+                  td(sub.to),
+                  td(sub.sentence),
+                )
+
+              },
+            ),
+          )
+
+      },
+    )
     div(
-      display.flex,
-      flexDirection.row,
-      div(width := "33.3%", h2("Search"), searchDiv),
-      div(width := "66.6%", h2("Watch"), videoDiv),
+      div(
+        display.flex,
+        flexDirection.row,
+        VModifier.style("gap") := "5%",
+        div(width := "30%", h2("Search"), searchDiv),
+        div(width := "65%", h2("Watch"), videoDiv),
+      ),
+      debug,
     )
   }
 

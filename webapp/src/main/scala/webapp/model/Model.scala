@@ -38,7 +38,7 @@ object Model {
     def loadAndParseSubtitle(file: SubtitleFile): IO[List[SubtitleSentence]] =
       AssetsInput.loadSubtitle(file.entry).map { content =>
         val subtitleEntries: js.Array[SubtitleEntry] = WebVttParser.parse(content).entries
-        val mergedSentences                          = VttMerger.mergeSentences(subtitleEntries.toList.take(10))
+        val mergedSentences                          = VttMerger.mergeSentences(subtitleEntries.toList)
         mergedSentences
       }
 
