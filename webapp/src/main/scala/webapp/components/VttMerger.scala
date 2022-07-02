@@ -31,7 +31,7 @@ object VttMerger {
               val afterDot           = after.drop(1)
               val punctuationChar    = head.text(idx)
 
-              val mergedSentence = intermediate.map(_.text).mkString(" ") + beforeDot + punctuationChar
+              val mergedSentence = intermediate.map(_.text).mkString("", " ", " ") + beforeDot + punctuationChar
               val ids            = intermediate.map(_.id) ++ List(head.id)
               val res            =
                 SubtitleSentence(

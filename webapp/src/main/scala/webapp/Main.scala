@@ -64,6 +64,7 @@ object Main {
         results.map { sr =>
           val lecture = sr.lecture
           val merged  = table(
+            cls := "table table-zebra w-full",
             thead(
               tr(
                 th("from"),
