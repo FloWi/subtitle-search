@@ -50,12 +50,13 @@ object Main {
 
   def renderUI(lectures: List[Lecture]): HtmlVNode = {
 
-    val selectedLectureSubject = Subject.behavior(Option.empty[Lecture])
+    val selectedLectureSubject: BehaviorSubject[(Option[Lecture], Option[SubtitleSentence])] =
+      Subject.behavior(Option.empty -> Option.empty)
 
     val searchText          = Subject.behavior("")
     val submittedSearchText = Subject.behavior("")
 
-    val selectedSubtitleLocation: BehaviorSubject[Option[(SearchResult, Lecture, SubtitleSentence)]] =
+    val selectedSubtitleLocation: BehaviorSubject[Option[(Lecture, SubtitleSentence, Option[SearchResult])]] =
       Subject.behavior(Option.empty)
 
     val searchResultSub: Observable[SearchResult] = submittedSearchText.distinctOnEquals.flatMap { text =>
@@ -95,7 +96,13 @@ object Main {
                         td(sub.from),
                         td(sub.to),
                         td(markSearchTermInText(result.searchTerm, sub)),
-                        td(button("Jump", onClick.as(Some((result, sr.lecture, sub))) --> selectedSubtitleLocation)),
+                        td(
+                          button(
+                            "Jump",
+                            onClick.as(Some((sr.lecture, sub, Some(result)))) --> selectedSubtitleLocation,
+                          ),
+                          onClick.as((Some(sr.lecture), Some(sub))) --> selectedLectureSubject,
+                        ),
                       )
 
                     },
@@ -116,7 +123,7 @@ object Main {
           li(
             cursor.pointer,
             s"${lecture.title}",
-            onClick.as(Some(lecture)) --> selectedLectureSubject,
+            onClick.as((Some(lecture), None)) --> selectedLectureSubject,
           )
         },
       ),
@@ -130,9 +137,11 @@ object Main {
 </video>
        */
       selectedSubtitleLocation.map {
-        case None                          => VModifier.empty
-        case Some((sr, lecture, sentence)) =>
-          val tbl = table(
+        case None                                         => VModifier.empty
+        case Some((lecture, sentence, maybeSearchResult)) =>
+          val sentenceNode =
+            maybeSearchResult.map(sr => markSearchTermInText(sr.searchTerm, sentence)).getOrElse(p(sentence.sentence))
+          val tbl          = table(
             thead(
               tr(
                 th("from"),
@@ -144,7 +153,7 @@ object Main {
               tr(
                 td(sentence.from),
                 td(sentence.to),
-                td(markSearchTermInText(sr.searchTerm, sentence)),
+                td(sentenceNode),
               ),
             ),
           )
@@ -162,26 +171,34 @@ object Main {
       },
     )
 
-    val debug = div(
+    val wholeLectureDisplay = div(
       selectedLectureSubject.map {
-        case None          => VModifier.empty
-        case Some(lecture) =>
+        case (None, _)                     => VModifier.empty
+        case (Some(lecture), maybeSection) =>
           table(
             thead(
               tr(
                 th("from"),
                 th("to"),
                 th("sentence"),
+                th("jump"),
               ),
             ),
             tbody(
               lecture.sentences.map { sub =>
                 tr(
+                  VModifier.ifTrue(maybeSection.contains(sub))(backgroundColor := "var(--marked)"),
                   td(sub.from),
                   td(sub.to),
                   td(sub.sentence),
+                  td(
+                    button(
+                      "Jump",
+                      onClick.as(Some((lecture, sub, None))) --> selectedSubtitleLocation,
+                      onClick.as((Some(lecture), Some(sub))) --> selectedLectureSubject,
+                    ),
+                  ),
                 )
-
               },
             ),
           )
@@ -196,7 +213,7 @@ object Main {
         div(width := "30%", h2("Search"), searchDiv),
         div(width := "65%", h2("Watch"), videoDiv),
       ),
-      debug,
+      wholeLectureDisplay,
     )
   }
 

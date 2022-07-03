@@ -916,13 +916,107 @@
               ],
               "size": 19832637,
               "type": "directory"
+            },
+            {
+              "path": "recordings/week 2/02 Vectorization part 1",
+              "name": "02 Vectorization part 1",
+              "children": [
+                {
+                  "path": "recordings/week 2/02 Vectorization part 1/index.mp4",
+                  "name": "index.mp4",
+                  "size": 18108014,
+                  "type": "file",
+                  "extension": ".mp4"
+                },
+                {
+                  "path": "recordings/week 2/02 Vectorization part 1/subtitle.txt",
+                  "name": "subtitle.txt",
+                  "size": 5201,
+                  "type": "file",
+                  "extension": ".txt"
+                },
+                {
+                  "path": "recordings/week 2/02 Vectorization part 1/subtitles-en.vtt",
+                  "name": "subtitles-en.vtt",
+                  "size": 9930,
+                  "type": "file",
+                  "extension": ".vtt"
+                }
+              ],
+              "size": 18123145,
+              "type": "directory"
+            },
+            {
+              "path": "recordings/week 2/03 Vectorization part 2",
+              "name": "03 Vectorization part 2",
+              "children": [
+                {
+                  "path": "recordings/week 2/03 Vectorization part 2/C1_W2_Lab01_Python_Numpy_Vectorization_Soln.ipynb",
+                  "name": "C1_W2_Lab01_Python_Numpy_Vectorization_Soln.ipynb",
+                  "size": 30225,
+                  "type": "file",
+                  "extension": ".ipynb"
+                },
+                {
+                  "path": "recordings/week 2/03 Vectorization part 2/index.mp4",
+                  "name": "index.mp4",
+                  "size": 18095538,
+                  "type": "file",
+                  "extension": ".mp4"
+                },
+                {
+                  "path": "recordings/week 2/03 Vectorization part 2/subtitle.txt",
+                  "name": "subtitle.txt",
+                  "size": 5384,
+                  "type": "file",
+                  "extension": ".txt"
+                },
+                {
+                  "path": "recordings/week 2/03 Vectorization part 2/subtitles-en.vtt",
+                  "name": "subtitles-en.vtt",
+                  "size": 10288,
+                  "type": "file",
+                  "extension": ".vtt"
+                }
+              ],
+              "size": 18141435,
+              "type": "directory"
+            },
+            {
+              "path": "recordings/week 2/04 Gradient descent for multiple linear regression",
+              "name": "04 Gradient descent for multiple linear regression",
+              "children": [
+                {
+                  "path": "recordings/week 2/04 Gradient descent for multiple linear regression/index.mp4",
+                  "name": "index.mp4",
+                  "size": 20298109,
+                  "type": "file",
+                  "extension": ".mp4"
+                },
+                {
+                  "path": "recordings/week 2/04 Gradient descent for multiple linear regression/subtitle.txt",
+                  "name": "subtitle.txt",
+                  "size": 6035,
+                  "type": "file",
+                  "extension": ".txt"
+                },
+                {
+                  "path": "recordings/week 2/04 Gradient descent for multiple linear regression/subtitles-en.vtt",
+                  "name": "subtitles-en.vtt",
+                  "size": 11359,
+                  "type": "file",
+                  "extension": ".vtt"
+                }
+              ],
+              "size": 20315503,
+              "type": "directory"
             }
           ],
-          "size": 19832637,
+          "size": 76412720,
           "type": "directory"
         }
       ],
-      "size": 364916568,
+      "size": 421496651,
       "type": "directory"
     },
     {
@@ -933,6 +1027,6 @@
       "extension": ".css"
     }
   ],
-  "size": 364916643,
+  "size": 421496726,
   "type": "directory"
 }
