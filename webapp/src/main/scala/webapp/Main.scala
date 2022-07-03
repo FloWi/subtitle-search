@@ -5,6 +5,7 @@ import colibri.{BehaviorSubject, Observable, Subject}
 import org.scalajs.dom.KeyCode
 import outwatch._
 import outwatch.dsl._
+import sttp.client3.UriContext
 import webapp.components.VttMerger.SubtitleSentence
 import webapp.model.Model.{Lecture, SearchResult}
 
@@ -162,7 +163,7 @@ object Main {
             tbl,
             h3(lecture.title),
             video(
-              src                        := s"${lecture.videoFile.entry.path}#t=${sentence.from / 1000}",
+              src                        := AssetsInput.getAssetUri(uri"${lecture.videoFile.entry.path}#t=${sentence.from / 1000}").toString,
               VModifier.attr("controls") := true,
               tpe                        := "video/mp4",
               width                      := "90%",

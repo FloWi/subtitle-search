@@ -1,7 +1,12 @@
 package webapp
 
 import cats.effect.IO
+import org.scalajs.dom
+import outwatch.dsl.s
+import sttp.capabilities
+import sttp.client3.SttpBackend
 import sttp.client3.impl.cats.FetchCatsBackend
+import sttp.model.Uri
 
 object AssetsInput {
 
@@ -32,9 +37,16 @@ object AssetsInput {
         )
     }
 
-  private val assetLocation = ""
+  private val assetLocation = s"${dom.window.location.origin}/${if (
+    dom.window.location.host == "localhost" || dom.window.location.host
+      .startsWith("localhost")
+  ) ""
+  else "assets/"}"
 
-  val fetchBackend = FetchCatsBackend[IO]()
+  val fetchBackend: SttpBackend[IO, capabilities.WebSockets] = FetchCatsBackend[IO]()
+
+  def getAssetUri(relativeUri: Uri): Uri =
+    Uri.parse(assetLocation).toOption.get.resolve(relativeUri)
 
   def allAssetFiles: IO[FileOrDirectoryEntry] = {
     import io.circe.generic.auto._
@@ -43,7 +55,7 @@ object AssetsInput {
 
     val request = basicRequest
       .get(
-        uri"${assetLocation}/listing.json",
+        getAssetUri(uri"listing.json"),
       )
       .response(asJson[FileOrDirectoryEntry])
 
@@ -58,7 +70,7 @@ object AssetsInput {
 
     val request = basicRequest
       .get(
-        uri"${assetLocation}/".resolve(uri"${fileEntry.path}").resolve(uri"${fileEntry.name}"),
+        getAssetUri(uri"${fileEntry.path}").resolve(uri"${fileEntry.name}"),
       )
 
     request
