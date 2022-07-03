@@ -57,8 +57,12 @@ object Model {
         val video    = files.collectFirst { case e: VideoFile => e }.get
         val subtitle = files.collectFirst { case e: SubtitleFile => e }.get
 
+        val lectureTitle = path.split('/').takeRight(2).toList match {
+          case week :: title :: Nil => s"${week.capitalize} - ${title.capitalize}"
+          case _                    => path
+        }
         loadAndParseSubtitle(subtitle).map { sentences =>
-          Lecture(path.split('/').lastOption.getOrElse(path), video, subtitle, sentences)
+          Lecture(lectureTitle, video, subtitle, sentences)
         }
       }.map(_.sortBy(_.title))
 

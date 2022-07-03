@@ -533,6 +533,42 @@
               "type": "directory"
             },
             {
+              "path": "recordings/week 1/18 Running gradient descent",
+              "name": "18 Running gradient descent",
+              "children": [
+                {
+                  "path": "recordings/week 1/18 Running gradient descent/C1_W1_Lab05_Gradient_Descent_Soln.ipynb",
+                  "name": "C1_W1_Lab05_Gradient_Descent_Soln.ipynb",
+                  "size": 337848,
+                  "type": "file",
+                  "extension": ".ipynb"
+                },
+                {
+                  "path": "recordings/week 1/18 Running gradient descent/index.mp4",
+                  "name": "index.mp4",
+                  "size": 19258187,
+                  "type": "file",
+                  "extension": ".mp4"
+                },
+                {
+                  "path": "recordings/week 1/18 Running gradient descent/subtitle.txt",
+                  "name": "subtitle.txt",
+                  "size": 4673,
+                  "type": "file",
+                  "extension": ".txt"
+                },
+                {
+                  "path": "recordings/week 1/18 Running gradient descent/subtitles-en.vtt",
+                  "name": "subtitles-en.vtt",
+                  "size": 7493,
+                  "type": "file",
+                  "extension": ".vtt"
+                }
+              ],
+              "size": 19608201,
+              "type": "directory"
+            },
+            {
               "path": "recordings/week 1/jupyter notebook download",
               "name": "jupyter notebook download",
               "children": [
@@ -845,14 +881,58 @@
               "type": "directory"
             }
           ],
-          "size": 325475730,
+          "size": 345083931,
+          "type": "directory"
+        },
+        {
+          "path": "recordings/week 2",
+          "name": "week 2",
+          "children": [
+            {
+              "path": "recordings/week 2/01 Multiple Features",
+              "name": "01 Multiple Features",
+              "children": [
+                {
+                  "path": "recordings/week 2/01 Multiple Features/index.mp4",
+                  "name": "index.mp4",
+                  "size": 19811763,
+                  "type": "file",
+                  "extension": ".mp4"
+                },
+                {
+                  "path": "recordings/week 2/01 Multiple Features/subtitle.txt",
+                  "name": "subtitle.txt",
+                  "size": 7110,
+                  "type": "file",
+                  "extension": ".txt"
+                },
+                {
+                  "path": "recordings/week 2/01 Multiple Features/subtitles-en.vtt",
+                  "name": "subtitles-en.vtt",
+                  "size": 13764,
+                  "type": "file",
+                  "extension": ".vtt"
+                }
+              ],
+              "size": 19832637,
+              "type": "directory"
+            }
+          ],
+          "size": 19832637,
           "type": "directory"
         }
       ],
-      "size": 325475730,
+      "size": 364916568,
       "type": "directory"
+    },
+    {
+      "path": "style.css",
+      "name": "style.css",
+      "size": 75,
+      "type": "file",
+      "extension": ".css"
     }
   ],
-  "size": 325475730,
+  "size": 364916643,
   "type": "directory"
 }

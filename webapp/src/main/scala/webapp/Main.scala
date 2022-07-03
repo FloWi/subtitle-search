@@ -113,7 +113,11 @@ object Main {
       h2("All Lessons"),
       ul(
         lectures.map { lecture =>
-          li(s"${lecture.title}", onClick.as(Some(lecture)) --> selectedLectureSubject)
+          li(
+            cursor.pointer,
+            s"${lecture.title}",
+            onClick.as(Some(lecture)) --> selectedLectureSubject,
+          )
         },
       ),
     )
