@@ -1,2 +1,2 @@
 echo "generate directory listing"
-(cd webapp/assets/ && node ../../tools/index.js > listing.json)
+(cd webapp/recordings/ && node ../../tools/index.js > listing.json)
