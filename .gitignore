@@ -43,5 +43,5 @@ bin/
 
 #general
 *.class
-webapp/recordings
+webapp/assets_non_bundled
 tools/node_modules

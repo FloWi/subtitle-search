@@ -5,6 +5,6 @@ module.exports = webDev({
   assetsDir: "assets",
   extraStaticDirs: [
     "src", // for source maps
-    "recordings"
+    "assets_non_bundled"
   ]
 });
