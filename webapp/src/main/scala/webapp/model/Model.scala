@@ -16,10 +16,10 @@ object Model {
     def folder: String
   }
   case class VideoFile(entry: FileEntry)    extends AssetFile {
-    override val folder: String = entry.path.replace(s"/${entry.name}", "")
+    override val folder: String = entry.path
   }
   case class SubtitleFile(entry: FileEntry) extends AssetFile {
-    override val folder: String = entry.path.replace(s"/${entry.name}", "")
+    override val folder: String = entry.path
   }
 
   case class SearchResult(searchTerm: String, entries: List[SearchResultEntry])

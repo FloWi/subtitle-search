@@ -2,7 +2,6 @@ package webapp
 
 import cats.effect.IO
 import org.scalajs.dom
-import outwatch.dsl.s
 import sttp.capabilities
 import sttp.client3.SttpBackend
 import sttp.client3.impl.cats.FetchCatsBackend
@@ -11,11 +10,10 @@ import sttp.model.Uri
 object AssetsInput {
 
   case class FileOrDirectoryEntry(
-    path: String,
     name: String,
     size: Int,
     `type`: String,
-    children: Option[List[FileOrDirectoryEntry]],
+    contents: Option[List[FileOrDirectoryEntry]],
   )
 
   case class FileEntry(
@@ -25,12 +23,12 @@ object AssetsInput {
   )
 
   def flatten(fileEntry: FileOrDirectoryEntry): List[FileEntry] =
-    fileEntry.children match {
+    fileEntry.contents match {
       case Some(children) => children.flatMap(flatten)
       case None           =>
         List(
           FileEntry(
-            fileEntry.path,
+            fileEntry.name.split('/').dropRight(1).mkString("/"),
             fileEntry.name,
             fileEntry.size,
           ),
@@ -57,12 +55,12 @@ object AssetsInput {
       .get(
         getAssetUri(uri"listing.json"),
       )
-      .response(asJson[FileOrDirectoryEntry])
+      .response(asJson[List[FileOrDirectoryEntry]])
 
     request
       .send(fetchBackend)
       .to[IO]
-      .flatMap(resp => IO.fromEither(resp.body))
+      .flatMap(resp => IO.fromEither(resp.body.map(_.head)))
   }
 
   def loadSubtitle(fileEntry: FileEntry): IO[String] = {
@@ -70,7 +68,7 @@ object AssetsInput {
 
     val request = basicRequest
       .get(
-        getAssetUri(uri"${fileEntry.path}").resolve(uri"${fileEntry.name}"),
+        getAssetUri(uri"${fileEntry.name}"),
       )
 
     request

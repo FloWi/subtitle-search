@@ -163,7 +163,7 @@ object Main {
             tbl,
             h3(lecture.title),
             video(
-              src                        := AssetsInput.getAssetUri(uri"${lecture.videoFile.entry.path}#t=${sentence.from / 1000}").toString,
+              src                        := AssetsInput.getAssetUri(uri"${lecture.videoFile.entry.name}#t=${sentence.from / 1000}").toString,
               VModifier.attr("controls") := true,
               tpe                        := "video/mp4",
               width                      := "90%",
