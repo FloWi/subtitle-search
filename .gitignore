@@ -45,3 +45,4 @@ bin/
 *.class
 webapp/assets_non_bundled
 tools/node_modules
+dist
