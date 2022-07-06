@@ -10,14 +10,16 @@ import io.circe.syntax._
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
-import org.http4s.implicits._
-import org.http4s.server.staticcontent._
+import org.http4s.server.middleware.CORS
+import org.http4s.server.staticcontent.{fileService, FileService}
 import org.http4s.server.{Router, Server}
-import org.http4s.{HttpRoutes, Request, Response, StaticFile}
+import org.http4s.{HttpRoutes, Request, Response}
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax.CatsEffectConfigSource
+
+import scala.concurrent.duration.DurationInt
 
 object Main extends IOApp {
   implicit val logging: LoggerFactory[IO] = Slf4jFactory[IO]
@@ -26,18 +28,21 @@ object Main extends IOApp {
   val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
 
   override def run(args: List[String]): IO[ExitCode] = for {
-    conf <- Config.load
-    _    <- validateEnvironment(conf)
-    _    <- logger.info(s"starting server with this config")
-    _    <- logger.info(s"\n$conf")
-    res  <- app(conf).use(_ => IO.never).as(ExitCode.Success)
+//    cwd <- Files[IO].currentWorkingDirectory
+    conf <- Config.load // (cwd)
+    _   <- validateEnvironment(conf)
+    _   <- logger.info(s"starting server with this config")
+    _   <- logger.info(s"\n$conf")
+    res <- app(conf).use(_ => IO.never).as(ExitCode.Success)
   } yield res
 
   val dsl: Http4sDsl[IO] = new Http4sDsl[IO] {}
   import dsl._
 
   def validateEnvironment(config: Config): IO[Unit] =
-    validatePathExists(Fs2Path(config.webAppFolder)) *> validatePathExists(Fs2Path(config.assetsFolder))
+    config.webAppFolder.map(p => validatePathExists(Fs2Path(p))).getOrElse(IO.unit) *> validatePathExists(
+      Fs2Path(config.assetsFolder),
+    )
 
   def validatePathExists(path: fs2.io.file.Path): IO[Unit] =
     Files[IO].exists(path).flatMap {
@@ -49,24 +54,20 @@ object Main extends IOApp {
     Ok(Listing.allLessons(config).map(_.asJson))
   }
 
-  def static(file: String, request: Request[IO]): IO[Response[IO]] =
-    StaticFile
-      .fromPath(fs2.io.file.Path(file), Some(request))
-      .getOrElseF(NotFound())
-
   def httpApp(implicit config: Config): Kleisli[IO, Request[IO], Response[IO]] =
     Router(
       "api"    -> apiService,
       "assets" -> fileService[IO](FileService.Config(config.assetsFolder)),
-      "/"      -> fileService[IO](FileService.Config(config.webAppFolder)),
     ).orNotFound
 
   def app(implicit config: Config): Resource[IO, Server] =
     EmberServerBuilder
       .default[IO]
+      .withLogger(logger)
       .withHost(Ipv4Address.fromString(config.host).get)
       .withPort(Port.fromInt(config.port).get)
-      .withHttpApp(httpApp)
+      .withHttpApp(CORS.policy.withAllowMethodsAll.withAllowOriginAll.withAllowHeadersAll.httpApp(httpApp))
+      .withShutdownTimeout(2.seconds)
       .build
 }
 
@@ -80,7 +81,7 @@ object Listing {
       io.circe.generic.semiauto.deriveEncoder
   }
 
-  def allLessons(config: Config): IO[List[Lesson]] =
+  def allLessons(implicit config: Config): IO[List[Lesson]] =
     Files[IO]
       .walk(
         file.Path(config.assetsFolder),
@@ -92,13 +93,18 @@ object Listing {
       .toList
       .map(listing)
 
-  def listing(allFiles: List[Fs2Path]): List[Lesson] = {
+  def listing(allFiles: List[Fs2Path])(implicit config: Config): List[Lesson] = {
 
     val byFolder: Map[Fs2Path, List[Fs2Path]] = allFiles.groupBy(_.parent.get)
     byFolder.map { case (folder, files) =>
       val subtitle = files.find(_.extName == ".vtt").get
       val video    = files.find(_.extName == ".mp4").get
-      Lesson(folder.toString, video.toString, subtitle.toString)
+
+      Lesson(
+        folder.toString,
+        Fs2Path(config.assetsFolder).relativize(video).toString,
+        Fs2Path(config.assetsFolder).relativize(subtitle).toString,
+      )
     }.toList
       .sortBy(_.folderUri)
   }
@@ -107,7 +113,7 @@ object Listing {
 case class Config(
   port: Int,
   host: String,
-  webAppFolder: String,
+  webAppFolder: Option[String],
   assetsFolder: String,
 ) {
   override def toString: String =
@@ -123,4 +129,10 @@ object Config {
 
   def load: IO[Config] =
     ConfigSource.defaultApplication.loadF[IO, Config]()
+//      .map { cfg =>
+//      cfg.copy(
+//        webAppFolder = cfg.webAppFolder.map(f => cwd.relativize(Fs2Path(f)).toString),
+//        assetsFolder = cwd.relativize(Fs2Path(cfg.assetsFolder)).toString,
+//      )
+//    }
 }

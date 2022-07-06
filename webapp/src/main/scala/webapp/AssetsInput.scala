@@ -3,7 +3,7 @@ package webapp
 import cats.effect.IO
 import org.scalajs.dom
 import sttp.capabilities
-import sttp.client3.SttpBackend
+import sttp.client3.{SttpBackend, UriContext}
 import sttp.client3.impl.cats.FetchCatsBackend
 import sttp.model.Uri
 
@@ -11,24 +11,31 @@ object AssetsInput {
 
   case class Lesson(folderUri: String, videoUri: String, subtitleUri: String)
 
-  private val assetLocation = s"${dom.window.location.origin}/${if (
-    dom.window.location.host == "localhost" || dom.window.location.host
-      .startsWith("localhost")
-  ) ""
-  else "assets/"}"
+  val isLocalhost: Boolean = dom.window.location.host == "localhost" || dom.window.location.host
+    .startsWith("localhost")
+
+  private val assetLocation =
+    if (isLocalhost) uri"http://localhost:8080/assets/"
+    else uri"assets/"
+
+  private val apiLocation =
+    if (isLocalhost) uri"http://localhost:8080/api/"
+    else uri"/api/"
 
   val fetchBackend: SttpBackend[IO, capabilities.WebSockets] = FetchCatsBackend[IO]()
 
   def getAssetUri(relativeUri: Uri): Uri =
-    Uri.parse(assetLocation).toOption.get.resolve(relativeUri)
+    assetLocation.resolve(relativeUri)
 
   def lessons: IO[List[Lesson]] = {
     import io.circe.generic.auto._
     import sttp.client3._
     import sttp.client3.circe._
 
-    val request = basicRequest
-      .get(uri"/api/lessons")
+    val lessonsUri = apiLocation.addPath("lessons")
+    println(lessonsUri)
+    val request    = basicRequest
+      .get(lessonsUri)
       .response(asJson[List[Lesson]])
 
     request
@@ -40,9 +47,11 @@ object AssetsInput {
   def loadSubtitle(fileEntry: Lesson): IO[String] = {
     import sttp.client3._
 
+    val uri     = getAssetUri(uri"${fileEntry.subtitleUri}")
+    println(uri)
     val request = basicRequest
       .get(
-        getAssetUri(uri"${fileEntry.subtitleUri}"),
+        uri,
       )
 
     request
