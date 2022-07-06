@@ -45,7 +45,6 @@ bin/
 *.class
 webapp/assets_non_bundled
 tools/node_modules
-docker-dist/*.html
-docker-dist/*.js*
-docker-dist/style.css
 **/.scala-build
+docker-dist/webapp/
+docker-dist/*.jar

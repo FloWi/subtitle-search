@@ -1,9 +1,8 @@
 package webapp.model
 
 import cats.effect.IO
-import colibri.Observable
 import webapp.AssetsInput
-import webapp.AssetsInput.FileEntry
+import webapp.AssetsInput.Lesson
 import webapp.components.VttMerger
 import webapp.components.VttMerger.SubtitleSentence
 import webapp.facade.{SubtitleEntry, WebVttParser}
@@ -11,16 +10,7 @@ import webapp.facade.{SubtitleEntry, WebVttParser}
 import scala.scalajs.js
 
 object Model {
-  case class Lecture(title: String, videoFile: VideoFile, subtitleFile: SubtitleFile, sentences: List[SubtitleSentence])
-  sealed trait AssetFile {
-    def folder: String
-  }
-  case class VideoFile(entry: FileEntry)    extends AssetFile {
-    override val folder: String = entry.path
-  }
-  case class SubtitleFile(entry: FileEntry) extends AssetFile {
-    override val folder: String = entry.path
-  }
+  case class Lecture(title: String, lesson: Lesson, sentences: List[SubtitleSentence])
 
   case class SearchResult(searchTerm: String, entries: List[SearchResultEntry])
   case class SearchResultEntry(lecture: Lecture, matchingSentences: List[SubtitleSentence])
@@ -35,35 +25,26 @@ object Model {
       SearchResult(text, entries)
     }
 
-    def loadAndParseSubtitle(file: SubtitleFile): IO[List[SubtitleSentence]] =
-      AssetsInput.loadSubtitle(file.entry).map { content =>
+    def loadAndParseSubtitle(lesson: Lesson): IO[List[SubtitleSentence]] =
+      AssetsInput.loadSubtitle(lesson).map { content =>
         val subtitleEntries: js.Array[SubtitleEntry] = WebVttParser.parse(content).entries
         val mergedSentences                          = VttMerger.mergeSentences(subtitleEntries.toList)
         mergedSentences
       }
 
-    def load(allFiles: List[FileEntry]): IO[List[Lecture]] = {
+    def load(allLessons: List[Lesson]): IO[List[Lecture]] = {
 
       import cats.implicits._
 
-      val allSubtitles: List[AssetFile] = allFiles.filter(_.name.endsWith(".vtt")).map(SubtitleFile)
-      val allVideos                     = allFiles.filter(_.name.endsWith(".mp4")).map(VideoFile)
-
-      val merged = allSubtitles.groupBy(_.folder) |+| allVideos.groupBy(_.folder)
-
-      merged.toList.traverse { case (path, files) =>
-        // let it crash
-        println(s"loading path: '$path'")
-        val video    = files.collectFirst { case e: VideoFile => e }.get
-        val subtitle = files.collectFirst { case e: SubtitleFile => e }.get
-
-        val lectureTitle = path.split('/').takeRight(2).toList match {
-          case week :: title :: Nil => s"${week.capitalize} - ${title.capitalize}"
-          case _                    => path
+      allLessons.traverse { lesson =>
+        loadAndParseSubtitle(lesson).map { sentences =>
+          val lectureTitle = lesson.folderUri.split('/').takeRight(2).toList match {
+            case week :: title :: Nil => s"${week.capitalize} - ${title.capitalize}"
+            case _                    => lesson.folderUri
+          }
+          Lecture(lectureTitle, lesson, sentences)
         }
-        loadAndParseSubtitle(subtitle).map { sentences =>
-          Lecture(lectureTitle, video, subtitle, sentences)
-        }
+
       }.map(_.sortBy(_.title))
 
     }

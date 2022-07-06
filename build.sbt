@@ -13,6 +13,13 @@ val versions = new {
   val catsEffectVersion  = "3.3.12"
   val srtVttParser       = "1.1.0"
 
+  val Http4sVersion          = "0.23.12"
+  val CirceVersion           = "0.14.2"
+  val MunitVersion           = "0.7.29"
+  val LogbackVersion         = "1.2.10"
+  val MunitCatsEffectVersion = "1.0.7"
+  val PureconfigVersion      = "0.17.1"
+
 }
 
 lazy val scalaJsMacrotaskExecutor = Seq(
@@ -21,7 +28,33 @@ lazy val scalaJsMacrotaskExecutor = Seq(
   Compile / npmDependencies += "setimmediate"  -> "1.0.5", // polyfill
 )
 
-lazy val webapp = project
+lazy val fileserver = (project in file("file-server"))
+  .settings(
+    organization         := "de.flwi",
+    name                 := "quickstart",
+    version              := "0.0.1-SNAPSHOT",
+    scalaVersion         := "2.13.8",
+    libraryDependencies ++= Seq(
+      "org.http4s"            %% "http4s-ember-server"    % versions.Http4sVersion,
+      "org.http4s"            %% "http4s-ember-client"    % versions.Http4sVersion,
+      "org.http4s"            %% "http4s-circe"           % versions.Http4sVersion,
+      "org.http4s"            %% "http4s-dsl"             % versions.Http4sVersion,
+      "io.circe"              %% "circe-generic"          % versions.CirceVersion,
+      "com.github.pureconfig" %% "pureconfig-generic"     % versions.PureconfigVersion,
+      "com.github.pureconfig" %% "pureconfig-cats-effect" % versions.PureconfigVersion,
+      "org.scalameta"         %% "munit"                  % versions.MunitVersion           % Test,
+      "org.typelevel"         %% "munit-cats-effect-3"    % versions.MunitCatsEffectVersion % Test,
+      "ch.qos.logback"         % "logback-classic"        % versions.LogbackVersion         % Runtime,
+    ),
+    addCompilerPlugin(
+      "org.typelevel"              %% "kind-projector"     % "0.13.2" cross CrossVersion.full,
+    ),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+    testFrameworks       += new TestFramework("munit.Framework"),
+    fork                 := true,
+  )
+
+lazy val webapp = (project in file("webapp"))
   .enablePlugins(
     ScalaJSPlugin,
     ScalaJSBundlerPlugin,
@@ -63,7 +96,9 @@ lazy val webapp = project
     Test / requireJsDomEnv        := true,
   )
 
-addCommandAlias("prod", "fullOptJS/webpack")
+addCommandAlias("prod", "; prod-webapp; prod-fileserver")
+addCommandAlias("prod-webapp", "webapp/fullOptJS/webpack")
+addCommandAlias("prod-fileserver", "fileserver/assembly")
 addCommandAlias("dev", "devInit; devWatchAll; devDestroy")
 addCommandAlias("devInit", "; webapp/fastOptJS/startWebpackDevServer")
 addCommandAlias("devWatchAll", "~; webapp/fastOptJS/webpack")

@@ -23,9 +23,8 @@ object Main {
   )
 
   val lecturesIO: IO[List[Lecture]] = for {
-    filesOrDirs <- AssetsInput.allAssetFiles
-    files        = AssetsInput.flatten(filesOrDirs)
-    lectures    <- Lecture.load(files)
+    lessons  <- AssetsInput.lessons
+    lectures <- Lecture.load(lessons)
   } yield lectures
 
   def markSearchTermInText(searchTerm: String, sentence: SubtitleSentence) = {
@@ -163,7 +162,7 @@ object Main {
             tbl,
             h3(lecture.title),
             video(
-              src                        := AssetsInput.getAssetUri(uri"${lecture.videoFile.entry.name}#t=${sentence.from / 1000}").toString,
+              src                        := AssetsInput.getAssetUri(uri"${lecture.lesson.videoUri}#t=${sentence.from / 1000}").toString,
               VModifier.attr("controls") := true,
               tpe                        := "video/mp4",
               width                      := "90%",

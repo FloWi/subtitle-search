@@ -1,23 +1,11 @@
-FROM ubuntu
-
+FROM eclipse-temurin:8-jre-alpine
 #COPY ["package.json", "package-lock.json*", "generate-listing.js", "server.js", "refresh-and-run.sh", "/subtitle-search/"]
 
-RUN apt-get update  \
-  && apt-get install -y wget tree \
-  && rm -rf /var/lib/apt/lists/* \
-  && wget https://github.com/svenstaro/miniserve/releases/download/v0.20.0/miniserve-v0.20.0-x86_64-unknown-linux-musl -O /miniserve-linux \
-  && chmod +x /miniserve-linux
+COPY ["./", "/subtitle-search/"]
 
-
-#RUN npm install -y
-
-#ENV NODE_ENV=production
-
-COPY ["refresh-and-run.sh", "/subtitle-search/"]
-COPY ["*.html", "*.css", "*.js*", "/subtitle-search/webapp/"]
-
-RUN mkdir /subtitle-search/webapp/assets
+ENV WEBAPP_FOLDER=/subtitle-search/webapp
+ENV ASSETS_FOLDER=/assets
 
 WORKDIR /subtitle-search
-EXPOSE 3000
-CMD ["/subtitle-search/refresh-and-run.sh"]
+EXPOSE 8080
+CMD ["java", "-jar", "/subtitle-search/quickstart-assembly-0.0.1-SNAPSHOT.jar"]

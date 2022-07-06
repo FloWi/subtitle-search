@@ -9,31 +9,7 @@ import sttp.model.Uri
 
 object AssetsInput {
 
-  case class FileOrDirectoryEntry(
-    name: String,
-    size: Int,
-    `type`: String,
-    contents: Option[List[FileOrDirectoryEntry]],
-  )
-
-  case class FileEntry(
-    path: String,
-    name: String,
-    size: Int,
-  )
-
-  def flatten(fileEntry: FileOrDirectoryEntry): List[FileEntry] =
-    fileEntry.contents match {
-      case Some(children) => children.flatMap(flatten)
-      case None           =>
-        List(
-          FileEntry(
-            fileEntry.name.split('/').dropRight(1).mkString("/"),
-            fileEntry.name,
-            fileEntry.size,
-          ),
-        )
-    }
+  case class Lesson(folderUri: String, videoUri: String, subtitleUri: String)
 
   private val assetLocation = s"${dom.window.location.origin}/${if (
     dom.window.location.host == "localhost" || dom.window.location.host
@@ -46,29 +22,27 @@ object AssetsInput {
   def getAssetUri(relativeUri: Uri): Uri =
     Uri.parse(assetLocation).toOption.get.resolve(relativeUri)
 
-  def allAssetFiles: IO[FileOrDirectoryEntry] = {
+  def lessons: IO[List[Lesson]] = {
     import io.circe.generic.auto._
     import sttp.client3._
     import sttp.client3.circe._
 
     val request = basicRequest
-      .get(
-        getAssetUri(uri"listing.json"),
-      )
-      .response(asJson[List[FileOrDirectoryEntry]])
+      .get(uri"/api/lessons")
+      .response(asJson[List[Lesson]])
 
     request
       .send(fetchBackend)
       .to[IO]
-      .flatMap(resp => IO.fromEither(resp.body.map(_.head)))
+      .flatMap(resp => IO.fromEither(resp.body))
   }
 
-  def loadSubtitle(fileEntry: FileEntry): IO[String] = {
+  def loadSubtitle(fileEntry: Lesson): IO[String] = {
     import sttp.client3._
 
     val request = basicRequest
       .get(
-        getAssetUri(uri"${fileEntry.name}"),
+        getAssetUri(uri"${fileEntry.subtitleUri}"),
       )
 
     request
