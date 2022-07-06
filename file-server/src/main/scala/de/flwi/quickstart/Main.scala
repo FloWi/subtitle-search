@@ -7,25 +7,37 @@ import fs2.io.file
 import fs2.io.file.{Files, Path}
 import io.circe._
 import io.circe.syntax._
-import org.http4s.{HttpRoutes, Request, Response, StaticFile}
+import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
-import org.http4s.server.{Router, Server}
 import org.http4s.server.staticcontent._
-import org.http4s.circe._
+import org.http4s.server.{Router, Server}
+import org.http4s.{HttpRoutes, Request, Response, StaticFile}
+import org.typelevel.log4cats.slf4j.Slf4jFactory
+import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
+import pureconfig.ConfigSource
+import pureconfig.module.catseffect.syntax.CatsEffectConfigSource
 
 object Main extends IOApp {
+  implicit val logging: LoggerFactory[IO] = Slf4jFactory[IO]
 
-  override def run(args: List[String]): IO[ExitCode] =
-    app.use(_ => IO.never).as(ExitCode.Success)
+  // we summon LoggerFactory instance, and create logger
+  val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
+
+  override def run(args: List[String]): IO[ExitCode] = for {
+    conf <- Config.load
+    _ <- logger.info(s"starting server with this config")
+    _ <- logger.info(s"\n$conf")
+    res <- app(conf).use(_ => IO.never).as(ExitCode.Success)
+  } yield res
 
   val dsl: Http4sDsl[IO] = new Http4sDsl[IO] {}
   import dsl._
 
-  val apiService: HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apiService(implicit config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "lessons" =>
-      Ok(Listing.allLessons.map(_.asJson))
+      Ok(Listing.allLessons(config).map(_.asJson))
   }
 
   def static(file: String, request: Request[IO]): IO[Response[IO]] =
@@ -33,18 +45,20 @@ object Main extends IOApp {
       .fromPath(fs2.io.file.Path(file), Some(request))
       .getOrElseF(NotFound())
 
-  val httpApp: Kleisli[IO, Request[IO], Response[IO]] =
+  def httpApp(implicit config: Config): Kleisli[IO, Request[IO], Response[IO]] =
     Router(
       "api" -> apiService,
-      "assets" -> fileService[IO](FileService.Config("./assets")),
-      "/" -> fileService[IO](FileService.Config("./webapp"))
+      "assets" -> fileService[IO](
+        FileService.Config(s"./${config.assetsFolder}")
+      ),
+      "/" -> fileService[IO](FileService.Config(s"./${config.webAppFolder}"))
     ).orNotFound
 
-  val app: Resource[IO, Server] =
+  def app(implicit config: Config): Resource[IO, Server] =
     EmberServerBuilder
       .default[IO]
-      .withHost(ipv4"0.0.0.0")
-      .withPort(port"8080")
+      .withHost(Ipv4Address.fromString(config.host).get)
+      .withPort(Port.fromInt(config.port).get)
       .withHttpApp(httpApp)
       .build
 }
@@ -59,9 +73,13 @@ object Listing {
       io.circe.generic.semiauto.deriveEncoder
   }
 
-  def allLessons: IO[List[Lesson]] = {
+  def allLessons(config: Config): IO[List[Lesson]] = {
     Files[IO]
-      .walk(file.Path("assets"), maxDepth = Int.MaxValue, followLinks = true)
+      .walk(
+        file.Path(config.assetsFolder),
+        maxDepth = Int.MaxValue,
+        followLinks = true
+      )
       .filter(f => f.extName == ".vtt" | f.extName == ".mp4")
       .compile
       .toList
@@ -80,5 +98,26 @@ object Listing {
       .toList
       .sortBy(_.folder)
   }
+}
 
+case class Config(
+    port: Int,
+    host: String,
+    webAppFolder: String,
+    assetsFolder: String
+) {
+  override def toString: String =
+    s"""        host: $host
+       |        port: $port
+       |webAppFolder: $webAppFolder
+       |assetsFolder: $assetsFolder
+       |""".stripMargin
+}
+
+object Config {
+  import pureconfig.generic.auto._
+
+  def load: IO[Config] = {
+    ConfigSource.defaultApplication.loadF[IO, Config]()
+  }
 }
