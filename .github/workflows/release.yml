@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         scalaVersion: [ "2.13.8" ]
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
@@ -31,17 +31,18 @@ jobs:
         run: ./build-prod.sh
 
   debugfoo:
+#    needs: [build]
     runs-on: ubuntu-20.04
 
     steps:
 
       - name: event_name
         id: event_name
-        run: echo github.event_name
+        run: echo ${{github.event_name}}
 
       - name: ref
         id: ref
-        run: echo github.ref
+        run: echo ${{github.ref}}
 
 
 #  release:
