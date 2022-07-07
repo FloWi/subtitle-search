@@ -1,6 +1,6 @@
 # Subtitle Search
 
-A small webapp that helps you search in subtitles of videos.
+A small webapp that helps you search in subtitles of videos. You can search for words or phrases, and it will open the video at the exact location.
 
 ![Screenshot](docs/screenshot.png)
 
@@ -8,24 +8,32 @@ A small webapp that helps you search in subtitles of videos.
 
 You should make sure that the following components are pre-installed on your machine:
 
-- [Node.js](https://nodejs.org/en/download/)
+- [docker](https://docs.docker.com/engine/install/)
 
 ## Using the webapp
 
-- Download the release from github
-- extract archive into folder
-- inside that folder create an assets folder where you put in the mp4- and vtt-files that you need to download from coursera
-  - the app expects to have _one_ mp4-file next to _one_ vtt-file in a subfolder.
-- run the command below to create a listing of the contents (since the webapp running in the browser cannot list all files in a directory)
-- you can now serve the folder as static files (e.g. `npx serve`)
+I created a docker image that hosts a static fileserver. This serves both the webapp and also the recordings on your machine. 
+To give the image access to your files, you need to mount the folder with your recordings to `/assets` inside the docker container.
 
-This is how your folder should look like
+```shell
+docker run --rm \
+       -p 8080:8080 \
+       -v "/the/path/to/your/assets/:/assets/" \
+       --name subtitle-search \
+       ghcr.io/flowi/subtitle-search:latest
+
+```
+
+The only requirement is that your assets folder contains a subfolder for each lesson that contains both the mp4 and vtt files. 
+The naming and depth doesn't matter - the fileserver will walk the whole directory tree to look for mp4-vtt pairs. 
+
+### Example of a folder structure:
+
 `tree -l .`
 
 ```text
 .
 ├── assets
-│     ├── listing.json
 │     └── recordings
 │         ├── week 1
 │         │     ├── 01 What is machine learning
@@ -45,37 +53,7 @@ This is how your folder should look like
 │         │     │     ├── index.mp4
 │         │     │     ├── subtitle.txt
 │         │     │     └── subtitles-en.vtt
-├── index.html
-├── main-4d68bdac8ec2364a3a59-hashed.js
-├── main-4d68bdac8ec2364a3a59-hashed.js.map
-└── style.css
 ```
-
-### workflow
-
-```shell
-# extract files from release archive
-
-tar xzf ~/Downloads/subtitle-search-0.0.1.tar.gz
-mkdir assets
-
-# copy/move/symlink downloaded videos in assets folder
-# e.g.
-ln -s ~/Downloads/ml-course/recordings assets/recordings
-
-# create directory listing using npm package `directory-tree` that also comes with a cli tool
-(cd assets; npx directory-tree \
---path . \
---attributes size,type,extension \
---exclude "/node_modules|\.DS_Store|listing\.json/" \
---pretty \
---output ./listing.json)
-
-# start http server for static files
-npx serve
-```
-
-Whenever you change the directory structure (e.g. you downloaded new videos) you need to execute the `npx directory-tree ...` command again to re-generate `assets/listing.json`.
 
 ## Working in dev mode
 
@@ -87,7 +65,16 @@ You should make sure that the following components are pre-installed on your mac
 - [Node.js](https://nodejs.org/en/download/)
 - [Yarn](https://yarnpkg.com/en/docs/install)
 
-Run
+Run (open two shells)
+
+#### fileserver
+```sh
+# set the path to your assets folder as an env var
+export ASSETS_FOLDER="$PWD/webapp/assets_non_bundled/assets"
+sbt dev-fileserver
+```
+
+#### webapp
 
 ```sh
 sbt dev
