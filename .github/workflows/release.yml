@@ -1,6 +1,6 @@
 # https://docs.github.com/en/actions
 
-name: "Release Container and "
+name: "Build and Release"
 
 on: # yamllint disable-line rule:truthy
   push:
@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        scalaVersion: ["2.13.8"]
+        scalaVersion: [ "2.13.8" ]
     runs-on: ubuntu-20.04
 
     steps:
@@ -31,9 +31,8 @@ jobs:
 
 
   release:
-    name: "Release"
-
     runs-on: "ubuntu-latest"
+    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Checkout
