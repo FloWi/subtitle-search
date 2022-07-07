@@ -1,4 +1,4 @@
-package de.flwi.quickstart
+package de.flwi.subtitlesearch
 
 import cats.data.Kleisli
 import cats.effect._
