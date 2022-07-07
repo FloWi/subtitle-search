@@ -5,7 +5,7 @@ name: "Build and Release"
 on: # yamllint disable-line rule:truthy
   push:
     branches: [ main ]
-    tags: "**"
+    tags: [ "**" ]
   pull_request:
     branches: [ main ]
 #  push:
@@ -30,43 +30,56 @@ jobs:
       - name: Build
         run: ./build-prod.sh
 
-
-  release:
-    runs-on: "ubuntu-latest"
-    if: startsWith(github.ref, 'refs/tags/v')
+  debugfoo:
+    runs-on: ubuntu-20.04
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
 
-      - name: Get the version
-        id: version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: event_name
+        id: event_name
+        run: echo github.event_name
 
-      - name: Get image repository
-        id: image_repository
-        run: echo ::set-output name=IMAGE_REPOSITORY::$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+      - name: ref
+        id: ref
+        run: echo github.ref
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to ghcr.io
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & Push Docker Image
-        uses: docker/build-push-action@v2
-        with:
-          context: ./docker-dist
-          platforms: linux/amd64,linux/arm64
-          push: ${{ startsWith(github.ref, 'refs/tags/') }}
-          tags: ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:${{ steps.version.outputs.VERSION }}, ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:latest
+#  release:
+#    runs-on: "ubuntu-latest"
+#    if: startsWith(github.ref, 'refs/tags/v')
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#
+#      - name: Get the version
+#        id: version
+#        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+#
+#      - name: Get image repository
+#        id: image_repository
+#        run: echo ::set-output name=IMAGE_REPOSITORY::$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+#
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v1
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v1
+#
+#      - name: Login to ghcr.io
+#        uses: docker/login-action@v1
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Build & Push Docker Image
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: ./docker-dist
+#          platforms: linux/amd64,linux/arm64
+#          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+#          tags: ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:${{ steps.version.outputs.VERSION }}, ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:latest
 
 
 #    steps:
