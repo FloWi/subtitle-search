@@ -4,8 +4,12 @@ name: "Release Container and "
 
 on: # yamllint disable-line rule:truthy
   push:
-    tags:
-      - "**"
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+#  push:
+#    tags:
+#      - "**"
 
 jobs:
 
