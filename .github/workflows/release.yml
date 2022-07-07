@@ -30,7 +30,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: docker-dist
-          path: |
+          path: |            
             docker-dist/webapp/
             docker-dist/fileserver/
 
@@ -46,6 +46,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: docker-dist
+          path: docker-dist/
 
       - name: Get the version
         id: version
@@ -84,7 +85,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: docker-dist
-
+          path: docker-dist/
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
