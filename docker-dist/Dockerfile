@@ -8,4 +8,4 @@ ENV ASSETS_FOLDER=/assets
 
 WORKDIR /subtitle-search
 EXPOSE 8080
-CMD ["java", "-jar", "/subtitle-search/quickstart-assembly-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "/subtitle-search/fileserver/quickstart-assembly-0.0.1-SNAPSHOT.jar"]
