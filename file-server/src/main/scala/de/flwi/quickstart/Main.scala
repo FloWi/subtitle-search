@@ -58,6 +58,10 @@ object Main extends IOApp {
     Router(
       "api"    -> apiService,
       "assets" -> fileService[IO](FileService.Config(config.assetsFolder)),
+      "/"      -> (config.webAppFolder match {
+        case Some(f) => fileService[IO](FileService.Config(f))
+        case None    => HttpRoutes.empty[IO]
+      }),
     ).orNotFound
 
   def app(implicit config: Config): Resource[IO, Server] =
