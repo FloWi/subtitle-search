@@ -68,8 +68,6 @@ jobs:
           tags: ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:${{ steps.version.outputs.VERSION }}, ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:latest
 
 
-
-
 #    steps:
 #      - name: "Determine tag"
 #        run: "echo \"RELEASE_TAG=${GITHUB_REF#refs/tags/}\" >> $GITHUB_ENV"
