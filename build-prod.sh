@@ -1,6 +1,6 @@
 sbt prod
 
-rm docker-dist/*.jar
+rm -r docker-dist/fileserver
 rm -r docker-dist/webapp
 
 mkdir -p docker-dist/webapp

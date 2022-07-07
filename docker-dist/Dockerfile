@@ -1,7 +1,7 @@
 FROM eclipse-temurin:8-jre-alpine
-#COPY ["package.json", "package-lock.json*", "generate-listing.js", "server.js", "refresh-and-run.sh", "/subtitle-search/"]
 
-COPY ["./", "/subtitle-search/"]
+ADD ["./webapp", "/subtitle-search/webapp/"]
+ADD ["./fileserver", "/subtitle-search/fileserver"]
 
 ENV WEBAPP_FOLDER=/subtitle-search/webapp
 ENV ASSETS_FOLDER=/assets
