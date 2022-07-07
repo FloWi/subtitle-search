@@ -97,38 +97,3 @@ jobs:
             webapp/target/scala-2.13/scalajs-bundler/main/dist/*
             file-server/target/scala-2.13/quickstart-assembly-0.0.1-SNAPSHOT.jar
 
-#    steps:
-#      - name: "Determine tag"
-#        run: "echo \"RELEASE_TAG=${GITHUB_REF#refs/tags/}\" >> $GITHUB_ENV"
-#
-#      - name: "Create release"
-#        uses: "actions/github-script@v5"
-#        with:
-#          github-token: "${{ secrets.ERGEBNIS_BOT_TOKEN }}"
-#          script: |
-#            try {
-#              await github.rest.repos.createRelease({
-#                draft: false,
-#                generate_release_notes: true,
-#                name: process.env.RELEASE_TAG,
-#                owner: context.repo.owner,
-#                prerelease: false,
-#                repo: context.repo.repo,
-#                tag_name: process.env.RELEASE_TAG,
-#              });
-#            } catch (error) {
-#              core.setFailed(error.message);
-#            }
-
-
-#name: Release Container
-#
-#on:
-#  push:
-#    tags:
-#      - "*"
-#
-#jobs:
-#  build:
-#    name: Release Container
-#    runs-on: ubuntu-latest
