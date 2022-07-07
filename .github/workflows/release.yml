@@ -46,7 +46,7 @@ jobs:
         run: echo ${{github.ref}}
 
 
-  release:
+  release-docker:
     needs: [build]
     runs-on: ubuntu-20.04
     if: startsWith(github.ref, 'refs/tags/v')
@@ -84,6 +84,18 @@ jobs:
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:${{ steps.version.outputs.VERSION }}, ghcr.io/${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}:latest
 
+  release-webapp:
+    needs: [build]
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            webapp/target/scala-2.13/scalajs-bundler/main/dist/*
+            file-server/target/scala-2.13/quickstart-assembly-0.0.1-SNAPSHOT.jar
 
 #    steps:
 #      - name: "Determine tag"
