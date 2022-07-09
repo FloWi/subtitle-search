@@ -58,6 +58,7 @@ object Main extends IOApp {
     Router(
       "api"    -> apiService,
       "assets" -> fileService[IO](FileService.Config(config.assetsFolder)),
+//      "assets" -> Logger.httpRoutes(logHeaders = true, logBody = false)(fileService[IO](FileService.Config(config.assetsFolder))),
       "/"      -> (config.webAppFolder match {
         case Some(f) => fileService[IO](FileService.Config(f))
         case None    => HttpRoutes.empty[IO]

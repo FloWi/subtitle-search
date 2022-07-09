@@ -13,7 +13,7 @@ val versions = new {
   val catsEffectVersion  = "3.3.12"
   val srtVttParser       = "1.1.0"
 
-  val Http4sVersion          = "0.23.12"
+  val Http4sVersion          = "0.23.13"
   val CirceVersion           = "0.14.2"
   val MunitVersion           = "0.7.29"
   val LogbackVersion         = "1.2.10"
